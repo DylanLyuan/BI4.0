@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会议日程</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-medium: #232323;
+            --bg-light: #2a2a2a;
+            --border-color: #3a3a3a;
+            --text-primary: #e6e6e6;
+            --text-secondary: #aaaaaa;
+            --accent-color: #ffbb00;
+            --accent-bg: #663c00;
+            --link-color: #4dabff;
+            --tag-bg: #444;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --button-primary: #2c5282;
+            --button-primary-hover: #2b4c7a;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        
+        .header {
+            background-color: var(--bg-medium);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .page-title {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .breadcrumb a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .breadcrumb-separator {
+            color: var(--text-secondary);
+        }
+        
+        .container {
+            padding: 16px;
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .view-switcher {
+            display: flex;
+            background-color: var(--bg-medium);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .view-btn {
+            padding: 8px 16px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .view-btn.active {
+            background-color: var(--button-primary);
+            color: var(--text-primary);
+        }
+        
+        .view-btn:hover:not(.active) {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .btn {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background-color: #3a3a3a;
+        }
+        
+        .btn-primary {
+            background-color: var(--button-primary);
+            border-color: var(--button-primary);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--button-primary-hover);
+        }
+        
+        .btn-icon {
+            margin-right: 8px;
+            font-size: 14px;
+        }
+        
+        .filter-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .filter-select {
+            background-color: var(--bg-medium);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            min-width: 200px;
+        }
+        
+        .filter-select option {
+            background-color: var(--bg-medium);
+            color: var(--text-primary);
+        }
+        
+        /* 日程列表视图 */
+        .list-view {
+            display: block;
+        }
+        
+        .calendar-view {
+            display: none;
+        }
+        
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .schedule-table th, .schedule-table td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .schedule-table th {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .schedule-table tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+        
+        .schedule-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .tag {
+            background-color: var(--tag-bg);
+            padding: 2px 8px;
+            border-radius: 3px;
+            color: var(--text-secondary);
+            margin-right: 5px;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+        
+        .action-btn {
+            color: var(--link-color);
+            cursor: pointer;
+            margin: 0 5px;
+            text-decoration: none;
+        }
+        
+        .action-btn:hover {
+            text-decoration: underline;
+        }
+        
+        /* 日历视图 */
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background-color: var(--border-color);
+            border: 1px solid var(--border-color);
+        }
+        
+        .calendar-header {
+            background-color: var(--bg-light);
+            padding: 12px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .calendar-day {
+            background-color: var(--bg-medium);
+            min-height: 120px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        
+        .day-number {
+            font-weight: 500;
+        }
+        
+        .today {
+            background-color: rgba(44, 82, 130, 0.2);
+        }
+        
+        .other-month {
+            opacity: 0.5;
+        }
+        
+        .event {
+            background-color: rgba(44, 82, 130, 0.8);
+            color: var(--text-primary);
+            padding: 4px 8px;
+            border-radius: 3px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        
+        .event:hover {
+            background-color: rgba(44, 82, 130, 1);
+        }
+        
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: var(--bg-medium);
+            border-radius: 6px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 16px;
+        }
+        
+        .modal-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--link-color);
+        }
+        
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .schedule-not-found {
+            padding: 24px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+            background-color: var(--bg-medium);
+            border-radius: 4px;
+            margin-top: 16px;
+        }
+        
+        /* 响应式布局 */
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .schedule-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+        
+        /* 添加到已有的CSS样式中 */
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px 0;
+        }
+        
+        .calendar-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .calendar-nav {
+            background-color: var(--bg-medium);
+            min-width: 100px;
+            justify-content: center;
+        }
+        
+        .calendar-nav:hover {
+            background-color: var(--bg-light);
+        }
+        
+        /* 添加到样式表，支持输入组前缀显示 */
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-prefix {
+            position: absolute;
+            left: 10px;
+            color: var(--text-secondary);
+            z-index: 10;
+        }
+        
+        .input-group .form-control {
+            padding-left: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="page-title">会议日程</h1>
+        <div class="breadcrumb">
+            <a href="BGDetail.html">会议详情</a>
+            <span class="breadcrumb-separator">></span>
+            <span>日程表</span>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="toolbar">
+            <div class="view-switcher">
+                <button class="view-btn active" data-view="list">列表视图</button>
+                <button class="view-btn" data-view="calendar">日历视图</button>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-primary" id="add-schedule">
+                    <span class="btn-icon">+</span>新增日程
+                </button>
+                <button class="btn" onclick="location.href='BGDetail.html'">
+                    <span class="btn-icon">←</span>返回会议详情
+                </button>
+            </div>
+        </div>
+        
+        <div class="filter-container">
+            <span class="filter-label">人员筛选:</span>
+            <select class="filter-select" id="person-filter">
+                <option value="all">全部人员</option>
+                <option value="张明">张明</option>
+                <option value="李伟">李伟</option>
+                <option value="王芳">王芳</option>
+                <option value="赵强">赵强</option>
+            </select>
+        </div>
+        
+        <!-- 列表视图 -->
+        <div class="list-view">
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th width="12%">日期范围</th>
+                        <th width="10%">日程主题</th>
+                        <th width="8%">所在国家/城市</th>
+                        <th width="12%">行程安排</th>
+                        <th width="10%">拜访客户</th>
+                        <th width="7%">客户成交金额</th>
+                        <th width="7%">客户回款金额</th>
+                        <th width="8%">参会人员</th>
+                        <th width="10%">创建人/创建时间</th>
+                        <th width="10%">更新人/更新时间</th>
+                        <th width="6%">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="schedule-list">
+                    <tr data-id="1">
+                        <td>2025.08.08 (第1天) ~ 2025.08.09 (第2天)</td>
+                        <td>开幕式</td>
+                        <td>中国/上海</td>
+                        <td>高铁(G102)，上海站至会展中心</td>
+                        <td>上海新材料科技有限公司</td>
+                        <td>¥50,000</td>
+                        <td>¥30,000</td>
+                        <td>
+                            <span class="tag">张明</span>
+                            <span class="tag">李伟</span>
+                            <span class="tag">王芳</span>
+                            <span class="tag">赵强</span>
+                        </td>
+                        <td>系统管理员<br>2025.07.01 09:30</td>
+                        <td>王芳<br>2025.07.15 14:20</td>
+                        <td>
+                            <a href="#" class="action-btn edit-btn">编辑</a>
+                            <a href="#" class="action-btn delete-btn">删除</a>
+                        </td>
+                    </tr>
+                    <tr data-id="2">
+                        <td>2025.08.10 (第3天) ~ 2025.08.11 (第4天)</td>
+                        <td>新材料展示</td>
+                        <td>中国/北京</td>
+                        <td>飞机(CA1234)，上海浦东至北京首都机场</td>
+                        <td>北京科技发展有限公司</td>
+                        <td>¥80,000</td>
+                        <td>¥40,000</td>
+                        <td>
+                            <span class="tag">张明</span>
+                            <span class="tag">李伟</span>
+                        </td>
+                        <td>系统管理员<br>2025.07.01 10:15</td>
+                        <td>张明<br>2025.07.16 09:45</td>
+                        <td>
+                            <a href="#" class="action-btn edit-btn">编辑</a>
+                            <a href="#" class="action-btn delete-btn">删除</a>
+                        </td>
+                    </tr>
+                    <tr data-id="3">
+                        <td>2025.08.12 (第5天) ~ 2025.08.14 (第7天)</td>
+                        <td>技术论坛</td>
+                        <td>中国/深圳</td>
+                        <td>高铁(G5678)，北京南站至深圳北站</td>
+                        <td>深圳先进材料研究院</td>
+                        <td>¥120,000</td>
+                        <td>¥60,000</td>
+                        <td>
+                            <span class="tag">王芳</span>
+                            <span class="tag">赵强</span>
+                        </td>
+                        <td>系统管理员<br>2025.07.01 11:20</td>
+                        <td>赵强<br>2025.07.17 16:30</td>
+                        <td>
+                            <a href="#" class="action-btn edit-btn">编辑</a>
+                            <a href="#" class="action-btn delete-btn">删除</a>
+                        </td>
+                    </tr>
+                    <tr data-id="4">
+                        <td>2025.08.15 (第8天) ~ 2025.08.15 (第8天)</td>
+                        <td>项目对接</td>
+                        <td>中国/广州</td>
+                        <td>高铁(G8765)，深圳北站至广州南站</td>
+                        <td>广东新材料产业联盟</td>
+                        <td>¥200,000</td>
+                        <td>¥100,000</td>
+                        <td>
+                            <span class="tag">张明</span>
+                            <span class="tag">王芳</span>
+                        </td>
+                        <td>系统管理员<br>2025.07.02 08:45</td>
+                        <td>李伟<br>2025.07.18 10:10</td>
+                        <td>
+                            <a href="#" class="action-btn edit-btn">编辑</a>
+                            <a href="#" class="action-btn delete-btn">删除</a>
+                        </td>
+                    </tr>
+                    <tr data-id="5">
+                        <td>2025.08.16 (第9天) ~ 2025.08.18 (第11天)</td>
+                        <td>实地考察</td>
+                        <td>中国/苏州</td>
+                        <td>飞机(MU5678)，广州白云至上海虹桥，高铁(G1122)至苏州</td>
+                        <td>苏州工业园区材料科技有限公司</td>
+                        <td>¥300,000</td>
+                        <td>¥150,000</td>
+                        <td>
+                            <span class="tag">李伟</span>
+                            <span class="tag">赵强</span>
+                        </td>
+                        <td>系统管理员<br>2025.07.02 14:30</td>
+                        <td>系统管理员<br>2025.07.02 14:30</td>
+                        <td>
+                            <a href="#" class="action-btn edit-btn">编辑</a>
+                            <a href="#" class="action-btn delete-btn">删除</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 日历视图 -->
+        <div class="calendar-view">
+            <div class="calendar-controls">
+                <button class="btn calendar-nav" id="prev-month">
+                    <span class="btn-icon">◄</span>上个月
+                </button>
+                <div class="calendar-title">
+                    <span id="calendar-year">2025</span>年
+                    <span id="calendar-month">8</span>月
+                </div>
+                <button class="btn calendar-nav" id="next-month">
+                    下个月<span class="btn-icon">►</span>
+                </button>
+            </div>
+            <div class="calendar">
+                <div class="calendar-header">周日</div>
+                <div class="calendar-header">周一</div>
+                <div class="calendar-header">周二</div>
+                <div class="calendar-header">周三</div>
+                <div class="calendar-header">周四</div>
+                <div class="calendar-header">周五</div>
+                <div class="calendar-header">周六</div>
+                
+                <!-- 日历单元格 - 上个月 -->
+                <div class="calendar-day other-month">
+                    <div class="day-header">
+                        <span class="day-number">30</span>
+                        <span>7月</span>
+                    </div>
+                </div>
+                <div class="calendar-day other-month">
+                    <div class="day-header">
+                        <span class="day-number">31</span>
+                        <span>7月</span>
+                    </div>
+                </div>
+                
+                <!-- 日历单元格 - 8月 -->
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">1</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">2</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">3</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">4</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">5</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">6</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">7</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">8</span>
+                        <span>8月</span>
+                    </div>
+                    <div class="event" data-id="1">开幕式</div>
+                    <div class="event" data-id="2">新材料展示</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">9</span>
+                        <span>8月</span>
+                    </div>
+                    <div class="event" data-id="3">技术论坛</div>
+                    <div class="event" data-id="4">项目对接</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">10</span>
+                        <span>8月</span>
+                    </div>
+                    <div class="event" data-id="5">实地考察</div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">11</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">12</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                
+                <!-- 后续日期... -->
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">13</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">14</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">15</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">16</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">17</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">18</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+                <div class="calendar-day">
+                    <div class="day-header">
+                        <span class="day-number">19</span>
+                        <span>8月</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新增/编辑日程模态框 -->
+    <div class="modal" id="schedule-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">新增日程</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="schedule-form">
+                    <input type="hidden" id="schedule-id">
+                    <div class="form-group">
+                        <label class="form-label" for="schedule-start-date">开始日期</label>
+                        <input type="date" class="form-control" id="schedule-start-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="schedule-end-date">结束日期</label>
+                        <input type="date" class="form-control" id="schedule-end-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="schedule-title">日程主题</label>
+                        <input type="text" class="form-control" id="schedule-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">参与人员</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="person-1" name="persons" value="张明">
+                                <label for="person-1">张明</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="person-2" name="persons" value="李伟">
+                                <label for="person-2">李伟</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="person-3" name="persons" value="王芳">
+                                <label for="person-3">王芳</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="person-4" name="persons" value="赵强">
+                                <label for="person-4">赵强</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="schedule-location">所在国家/城市</label>
+                        <input type="text" class="form-control" id="schedule-location" placeholder="例如：中国/上海" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="schedule-transportation">行程安排</label>
+                        <textarea class="form-control" id="schedule-transportation" rows="2" placeholder="请说明交通工具，例如：高铁(G102)，上海站至会展中心" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="schedule-client">拜访客户</label>
+                        <input type="text" class="form-control" id="schedule-client" placeholder="例如：上海新材料科技有限公司">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="schedule-deal-amount">客户成交金额</label>
+                        <div class="input-group">
+                            <span class="input-prefix">¥</span>
+                            <input type="number" class="form-control" id="schedule-deal-amount" placeholder="例如：50000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="schedule-payment-amount">客户回款金额</label>
+                        <div class="input-group">
+                            <span class="input-prefix">¥</span>
+                            <input type="number" class="form-control" id="schedule-payment-amount" placeholder="例如：30000">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" id="cancel-schedule">取消</button>
+                <button class="btn btn-danger" id="delete-schedule" style="display: none; background-color: #d32f2f; border-color: #b71c1c;">删除</button>
+                <button class="btn btn-primary" id="save-schedule">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 添加DOM加载完成后执行的函数
+        document.addEventListener("DOMContentLoaded", function() {
+            try {
+                // 数据初始化 - 模拟数据
+                const scheduleData = [
+                    {
+                        id: 1,
+                        startDate: '2025-08-08',
+                        endDate: '2025-08-09',
+                        title: '开幕式',
+                        location: '中国/上海',
+                        transportation: '高铁(G102)，上海站至会展中心',
+                        client: '上海新材料科技有限公司',
+                        dealAmount: 50000,
+                        paymentAmount: 30000,
+                        persons: ['张明', '李伟', '王芳', '赵强'],
+                        createdBy: '系统管理员',
+                        createdAt: '2025-07-01 09:30',
+                        updatedBy: '王芳',
+                        updatedAt: '2025-07-15 14:20'
+                    },
+                    {
+                        id: 2,
+                        startDate: '2025-08-10',
+                        endDate: '2025-08-11',
+                        title: '新材料展示',
+                        location: '中国/北京',
+                        transportation: '飞机(CA1234)，上海浦东至北京首都机场',
+                        client: '北京科技发展有限公司',
+                        dealAmount: 80000,
+                        paymentAmount: 40000,
+                        persons: ['张明', '李伟'],
+                        createdBy: '系统管理员',
+                        createdAt: '2025-07-01 10:15',
+                        updatedBy: '张明',
+                        updatedAt: '2025-07-16 09:45'
+                    },
+                    {
+                        id: 3,
+                        startDate: '2025-08-12',
+                        endDate: '2025-08-14',
+                        title: '技术论坛',
+                        location: '中国/深圳',
+                        transportation: '高铁(G5678)，北京南站至深圳北站',
+                        client: '深圳先进材料研究院',
+                        dealAmount: 120000,
+                        paymentAmount: 60000,
+                        persons: ['王芳', '赵强'],
+                        createdBy: '系统管理员',
+                        createdAt: '2025-07-01 11:20',
+                        updatedBy: '赵强',
+                        updatedAt: '2025-07-17 16:30'
+                    },
+                    {
+                        id: 4,
+                        startDate: '2025-08-15',
+                        endDate: '2025-08-15',
+                        title: '项目对接',
+                        location: '中国/广州',
+                        transportation: '高铁(G8765)，深圳北站至广州南站',
+                        client: '广东新材料产业联盟',
+                        dealAmount: 200000,
+                        paymentAmount: 100000,
+                        persons: ['张明', '王芳'],
+                        createdBy: '系统管理员',
+                        createdAt: '2025-07-02 08:45',
+                        updatedBy: '李伟',
+                        updatedAt: '2025-07-18 10:10'
+                    },
+                    {
+                        id: 5,
+                        startDate: '2025-08-16',
+                        endDate: '2025-08-18',
+                        title: '实地考察',
+                        location: '中国/苏州',
+                        transportation: '飞机(MU5678)，广州白云至上海虹桥，高铁(G1122)至苏州',
+                        client: '苏州工业园区材料科技有限公司',
+                        dealAmount: 300000,
+                        paymentAmount: 150000,
+                        persons: ['李伟', '赵强'],
+                        createdBy: '系统管理员',
+                        createdAt: '2025-07-02 14:30',
+                        updatedBy: '系统管理员',
+                        updatedAt: '2025-07-02 14:30'
+                    }
+                ];
+                
+                let nextId = 6; // 用于生成新日程的ID
+                let currentEditId = null; // 当前编辑的日程ID
+                
+                // 视图切换
+                document.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        // 移除所有按钮的active类
+                        document.querySelectorAll('.view-btn').forEach(b => {
+                            b.classList.remove('active');
+                        });
+                        
+                        // 为当前按钮添加active类
+                        this.classList.add('active');
+                        
+                        // 显示对应视图
+                        const viewType = this.dataset.view;
+                        const listView = document.querySelector('.list-view');
+                        const calendarView = document.querySelector('.calendar-view');
+                        
+                        if (viewType === 'list') {
+                            if (listView) listView.style.display = 'block';
+                            if (calendarView) calendarView.style.display = 'none';
+                        } else {
+                            if (listView) listView.style.display = 'none';
+                            if (calendarView) calendarView.style.display = 'block';
+                        }
+                    });
+                });
+                
+                // 模态框控制 - 安全获取DOM元素
+                const modal = document.getElementById('schedule-modal');
+                const addScheduleBtn = document.getElementById('add-schedule');
+                const closeModalBtn = document.querySelector('.modal-close');
+                const cancelBtn = document.getElementById('cancel-schedule');
+                const saveBtn = document.getElementById('save-schedule');
+                
+                // 打开模态框 - 新增模式
+                if (addScheduleBtn) {
+                    addScheduleBtn.addEventListener('click', function() {
+                        openModalForAdd();
+                    });
+                }
+                
+                function openModalForAdd() {
+                    if (!modal) return;
+                    
+                    modal.style.display = 'flex';
+                    const form = document.getElementById('schedule-form');
+                    if (form) form.reset();
+                    
+                    const idField = document.getElementById('schedule-id');
+                    if (idField) idField.value = '';
+                    
+                    const modalTitle = document.querySelector('.modal-title');
+                    if (modalTitle) modalTitle.textContent = '新增日程';
+                    
+                    // 隐藏删除按钮
+                    const deleteBtn = document.getElementById('delete-schedule');
+                    if (deleteBtn) deleteBtn.style.display = 'none';
+                    
+                    currentEditId = null;
+                    
+                    // 设置默认开始日期和结束日期为会议第一天
+                    const startDateField = document.getElementById('schedule-start-date');
+                    const endDateField = document.getElementById('schedule-end-date');
+                    if (startDateField) startDateField.value = '2025-08-08';
+                    if (endDateField) endDateField.value = '2025-08-08';
+                }
+                
+                // 打开模态框 - 编辑模式
+                function openModalForEdit(id) {
+                    if (!modal) return;
+                    
+                    const schedule = scheduleData.find(s => s.id === parseInt(id));
+                    if (!schedule) return;
+                    
+                    modal.style.display = 'flex';
+                    
+                    const modalTitle = document.querySelector('.modal-title');
+                    if (modalTitle) modalTitle.textContent = '编辑日程';
+                    
+                    // 显示删除按钮
+                    const deleteBtn = document.getElementById('delete-schedule');
+                    if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+                    
+                    // 填充表单
+                    const idField = document.getElementById('schedule-id');
+                    const startDateField = document.getElementById('schedule-start-date');
+                    const endDateField = document.getElementById('schedule-end-date');
+                    const titleField = document.getElementById('schedule-title');
+                    const locationField = document.getElementById('schedule-location');
+                    const transportationField = document.getElementById('schedule-transportation');
+                    const clientField = document.getElementById('schedule-client');
+                    const dealAmountField = document.getElementById('schedule-deal-amount');
+                    const paymentAmountField = document.getElementById('schedule-payment-amount');
+                    
+                    if (idField) idField.value = schedule.id;
+                    if (startDateField) startDateField.value = schedule.startDate;
+                    if (endDateField) endDateField.value = schedule.endDate;
+                    if (titleField) titleField.value = schedule.title;
+                    if (locationField) locationField.value = schedule.location || '';
+                    if (transportationField) transportationField.value = schedule.transportation || '';
+                    if (clientField) clientField.value = schedule.client || '';
+                    if (dealAmountField) dealAmountField.value = schedule.dealAmount || '';
+                    if (paymentAmountField) paymentAmountField.value = schedule.paymentAmount || '';
+                    
+                    // 清除所有选中状态
+                    document.querySelectorAll('input[name="persons"]').forEach(checkbox => {
+                        if (checkbox) checkbox.checked = false;
+                    });
+                    
+                    // 选中相关人员
+                    schedule.persons.forEach(person => {
+                        const checkbox = document.querySelector(`input[name="persons"][value="${person}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    });
+                    
+                    currentEditId = schedule.id;
+                }
+                
+                // 关闭模态框
+                function closeModal() {
+                    if (modal) modal.style.display = 'none';
+                }
+                
+                if (closeModalBtn) {
+                    closeModalBtn.addEventListener('click', closeModal);
+                }
+                
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', closeModal);
+                }
+                
+                // 点击模态框外部关闭
+                if (modal) {
+                    modal.addEventListener('click', function(event) {
+                        if (event.target === modal) {
+                            closeModal();
+                        }
+                    });
+                }
+                
+                // 保存日程
+                if (saveBtn) {
+                    saveBtn.addEventListener('click', function() {
+                        const form = document.getElementById('schedule-form');
+                        if (!form) return;
+                        
+                        // 简单验证
+                        if (!form.checkValidity()) {
+                            form.reportValidity();
+                            return;
+                        }
+                        
+                        // 获取表单数据
+                        const scheduleId = document.getElementById('schedule-id')?.value;
+                        const startDate = document.getElementById('schedule-start-date')?.value;
+                        const endDate = document.getElementById('schedule-end-date')?.value;
+                        const title = document.getElementById('schedule-title')?.value;
+                        const location = document.getElementById('schedule-location')?.value;
+                        const transportation = document.getElementById('schedule-transportation')?.value;
+                        const client = document.getElementById('schedule-client')?.value;
+                        const dealAmount = document.getElementById('schedule-deal-amount')?.value;
+                        const paymentAmount = document.getElementById('schedule-payment-amount')?.value;
+                        
+                        // 验证开始日期不能晚于结束日期
+                        if (new Date(startDate) > new Date(endDate)) {
+                            alert('开始日期不能晚于结束日期');
+                            return;
+                        }
+                        
+                        if (!startDate || !endDate || !title || !location || !transportation) {
+                            alert('请填写所有必填字段');
+                            return;
+                        }
+                        
+                        // 获取选中的人员
+                        const selectedPersons = [];
+                        document.querySelectorAll('input[name="persons"]:checked').forEach(checkbox => {
+                            selectedPersons.push(checkbox.value);
+                        });
+                        
+                        if (selectedPersons.length === 0) {
+                            alert('请至少选择一名参与人员');
+                            return;
+                        }
+                        
+                        // 格式化日期范围，添加第几天信息
+                        const startObj = new Date(startDate);
+                        const endObj = new Date(endDate);
+                        const meetingStartDate = new Date('2025-08-08'); // 会议第一天
+                        
+                        const formatDate = (date) => {
+                            const day = date.getDate();
+                            const month = date.getMonth() + 1;
+                            const year = date.getFullYear();
+                            
+                            // 计算第几天
+                            const diffTime = date.getTime() - meetingStartDate.getTime();
+                            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                            
+                            return `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(2, '0')} (第${diffDays}天)`;
+                        };
+                        
+                        const dateRange = `${formatDate(startObj)} ~ ${formatDate(endObj)}`;
+                        
+                        // 使用数字格式化函数
+                        const formatCurrency = (amount) => {
+                            if (!amount) return '';
+                            return '¥' + parseInt(amount).toLocaleString('zh-CN');
+                        };
+                        
+                        // 格式化日期函数
+                        const formatDateTime = () => {
+                            const now = new Date();
+                            return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                        };
+                        
+                        // 当前用户名（在实际应用中应该从登录信息获取）
+                        const currentUser = '系统管理员';
+                        const currentTime = formatDateTime();
+                        
+                        if (currentEditId) {
+                            // 编辑现有日程
+                            const index = scheduleData.findIndex(s => s.id === currentEditId);
+                            if (index !== -1) {
+                                scheduleData[index] = {
+                                    id: currentEditId,
+                                    startDate,
+                                    endDate,
+                                    title,
+                                    location,
+                                    transportation,
+                                    client,
+                                    dealAmount: dealAmount ? parseInt(dealAmount) : null,
+                                    paymentAmount: paymentAmount ? parseInt(paymentAmount) : null,
+                                    persons: selectedPersons,
+                                    updatedBy: currentUser,
+                                    updatedAt: currentTime,
+                                    createdBy: scheduleData[index].createdBy,
+                                    createdAt: scheduleData[index].createdAt
+                                };
+                                
+                                // 更新列表视图
+                                const row = document.querySelector(`tr[data-id="${currentEditId}"]`);
+                                if (row) {
+                                    row.innerHTML = `
+                                        <td>${dateRange}</td>
+                                        <td>${title}</td>
+                                        <td>${location || ''}</td>
+                                        <td>${transportation || ''}</td>
+                                        <td>${client || ''}</td>
+                                        <td>${formatCurrency(dealAmount)}</td>
+                                        <td>${formatCurrency(paymentAmount)}</td>
+                                        <td>
+                                            ${selectedPersons.map(person => `<span class="tag">${person}</span>`).join('')}
+                                        </td>
+                                        <td>${scheduleData[index].createdBy}<br>${scheduleData[index].createdAt}</td>
+                                        <td>${currentUser}<br>${currentTime}</td>
+                                        <td>
+                                            <a href="#" class="action-btn edit-btn">编辑</a>
+                                            <a href="#" class="action-btn delete-btn">删除</a>
+                                        </td>
+                                    `;
+                                    addRowEventListeners(row);
+                                }
+                                
+                                // 更新日历视图
+                                updateCalendarView();
+                            }
+                        } else {
+                            // 创建新日程
+                            const newSchedule = {
+                                id: nextId++,
+                                startDate,
+                                endDate,
+                                title,
+                                location,
+                                transportation,
+                                client,
+                                dealAmount: dealAmount ? parseInt(dealAmount) : null,
+                                paymentAmount: paymentAmount ? parseInt(paymentAmount) : null,
+                                persons: selectedPersons,
+                                createdBy: currentUser,
+                                createdAt: currentTime,
+                                updatedBy: currentUser,
+                                updatedAt: currentTime
+                            };
+                            
+                            scheduleData.push(newSchedule);
+                            
+                            // 创建新行
+                            const scheduleList = document.getElementById('schedule-list');
+                            if (scheduleList) {
+                                const newRow = document.createElement('tr');
+                                newRow.setAttribute('data-id', newSchedule.id);
+                                newRow.innerHTML = `
+                                    <td>${dateRange}</td>
+                                    <td>${title}</td>
+                                    <td>${location || ''}</td>
+                                    <td>${transportation || ''}</td>
+                                    <td>${client || ''}</td>
+                                    <td>${formatCurrency(dealAmount)}</td>
+                                    <td>${formatCurrency(paymentAmount)}</td>
+                                    <td>
+                                        ${selectedPersons.map(person => `<span class="tag">${person}</span>`).join('')}
+                                    </td>
+                                    <td>${currentUser}<br>${currentTime}</td>
+                                    <td>${currentUser}<br>${currentTime}</td>
+                                    <td>
+                                        <a href="#" class="action-btn edit-btn">编辑</a>
+                                        <a href="#" class="action-btn delete-btn">删除</a>
+                                    </td>
+                                `;
+                                
+                                // 添加到表格
+                                scheduleList.appendChild(newRow);
+                                
+                                // 为新行添加事件监听器
+                                addRowEventListeners(newRow);
+                            }
+                            
+                            // 更新日历视图
+                            updateCalendarView();
+                        }
+                        
+                        // 筛选器可能需要更新
+                        applyPersonFilter();
+                        
+                        // 关闭模态框
+                        closeModal();
+                    });
+                }
+                
+                // 为表格行添加事件监听器
+                function addRowEventListeners(row) {
+                    if (!row) return;
+                    
+                    const editBtn = row.querySelector('.edit-btn');
+                    const deleteBtn = row.querySelector('.delete-btn');
+                    
+                    if (editBtn) {
+                        editBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const id = row.getAttribute('data-id');
+                            openModalForEdit(id);
+                        });
+                    }
+                    
+                    if (deleteBtn) {
+                        deleteBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const id = parseInt(row.getAttribute('data-id'));
+                            if (confirm('确定要删除此日程吗？')) {
+                                // 从数据中删除
+                                const index = scheduleData.findIndex(s => s.id === id);
+                                if (index !== -1) {
+                                    scheduleData.splice(index, 1);
+                                }
+                                
+                                // 从DOM中删除
+                                row.remove();
+                                
+                                // 从日历视图中删除
+                                const calendarEvent = document.querySelector(`.event[data-id="${id}"]`);
+                                if (calendarEvent) {
+                                    calendarEvent.remove();
+                                }
+                                
+                                // 检查是否需要显示"无数据"
+                                checkEmptyScheduleList();
+                            }
+                        });
+                    }
+                }
+                
+                // 初始化为表格行添加事件监听器
+                document.querySelectorAll('#schedule-list tr[data-id]').forEach(row => {
+                    addRowEventListeners(row);
+                });
+                
+                // 点击日历事件也可以编辑
+                document.querySelectorAll('.event').forEach(event => {
+                    if (event) {
+                        event.addEventListener('click', function() {
+                            const id = this.getAttribute('data-id');
+                            openModalForEdit(id);
+                        });
+                    }
+                });
+                
+                // 人员筛选
+                const personFilter = document.getElementById('person-filter');
+                if (personFilter) {
+                    personFilter.addEventListener('change', applyPersonFilter);
+                }
+                
+                function applyPersonFilter() {
+                    if (!personFilter) return;
+                    
+                    const selectedPerson = personFilter.value;
+                    const rows = document.querySelectorAll('#schedule-list tr[data-id]');
+                    let visibleCount = 0;
+                    
+                    rows.forEach(row => {
+                        if (selectedPerson === 'all') {
+                            row.style.display = '';
+                            visibleCount++;
+                        } else {
+                            const personTags = Array.from(row.querySelectorAll('.tag'));
+                            const hasSelectedPerson = personTags.some(tag => tag.textContent === selectedPerson);
+                            
+                            if (hasSelectedPerson) {
+                                row.style.display = '';
+                                visibleCount++;
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        }
+                    });
+                    
+                    // 如果没有匹配的日程，显示提示
+                    checkEmptyScheduleList();
+                    
+                    // 同时更新日历视图中的事件筛选
+                    updateCalendarEventFilter(selectedPerson);
+                }
+                
+                function checkEmptyScheduleList() {
+                    const scheduleList = document.getElementById('schedule-list');
+                    if (!scheduleList) return;
+                    
+                    const visibleRows = document.querySelectorAll('#schedule-list tr[data-id]:not([style*="display: none"])');
+                    const listView = document.querySelector('.list-view');
+                    if (!listView) return;
+                    
+                    const noResultsElement = document.querySelector('.schedule-not-found');
+                    
+                    if (visibleRows.length === 0) {
+                        if (!noResultsElement) {
+                            const emptyMessage = document.createElement('div');
+                            emptyMessage.className = 'schedule-not-found';
+                            emptyMessage.textContent = '没有找到匹配的日程安排';
+                            
+                            listView.appendChild(emptyMessage);
+                        }
+                    } else {
+                        if (noResultsElement) {
+                            noResultsElement.remove();
+                        }
+                    }
+                }
+                
+                function updateCalendarEventFilter(selectedPerson) {
+                    const events = document.querySelectorAll('.event');
+                    
+                    events.forEach(event => {
+                        if (!event) return;
+                        
+                        const id = parseInt(event.getAttribute('data-id'));
+                        const schedule = scheduleData.find(s => s.id === id);
+                        
+                        if (!schedule) return;
+                        
+                        if (selectedPerson === 'all' || schedule.persons.includes(selectedPerson)) {
+                            event.style.display = '';
+                        } else {
+                            event.style.display = 'none';
+                        }
+                    });
+                }
+                
+                // 日历控制 - 月份切换
+                let currentCalendarDate = new Date('2025-08-01'); // 默认显示会议时间
+                
+                const prevMonthBtn = document.getElementById('prev-month');
+                const nextMonthBtn = document.getElementById('next-month');
+                const calendarYearEl = document.getElementById('calendar-year');
+                const calendarMonthEl = document.getElementById('calendar-month');
+                
+                if (prevMonthBtn) {
+                    prevMonthBtn.addEventListener('click', function() {
+                        currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+                        updateCalendarDisplay();
+                    });
+                }
+                
+                if (nextMonthBtn) {
+                    nextMonthBtn.addEventListener('click', function() {
+                        currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+                        updateCalendarDisplay();
+                    });
+                }
+                
+                function updateCalendarDisplay() {
+                    // 更新年月显示
+                    if (calendarYearEl) {
+                        calendarYearEl.textContent = currentCalendarDate.getFullYear();
+                    }
+                    if (calendarMonthEl) {
+                        calendarMonthEl.textContent = currentCalendarDate.getMonth() + 1;
+                    }
+                    
+                    // 重新生成日历格子
+                    generateCalendarDays();
+                    
+                    // 更新日历上的日程事件
+                    updateCalendarView();
+                }
+                
+                function generateCalendarDays() {
+                    const calendarEl = document.querySelector('.calendar');
+                    if (!calendarEl) return;
+                    
+                    // 保留星期标题行
+                    const headerCells = document.querySelectorAll('.calendar-header');
+                    const headers = Array.from(headerCells).map(cell => cell.cloneNode(true));
+                    
+                    // 清空日历
+                    calendarEl.innerHTML = '';
+                    
+                    // 恢复星期标题
+                    headers.forEach(header => {
+                        calendarEl.appendChild(header);
+                    });
+                    
+                    // 获取当前月的第一天和最后一天
+                    const year = currentCalendarDate.getFullYear();
+                    const month = currentCalendarDate.getMonth();
+                    const firstDay = new Date(year, month, 1);
+                    const lastDay = new Date(year, month + 1, 0);
+                    
+                    // 获取第一天是星期几（0是周日，6是周六）
+                    const firstDayIndex = firstDay.getDay();
+                    
+                    // 添加上个月的日期
+                    const prevMonthLastDay = new Date(year, month, 0).getDate();
+                    for (let i = firstDayIndex - 1; i >= 0; i--) {
+                        const day = prevMonthLastDay - i;
+                        const prevMonth = month === 0 ? 12 : month;
+                        const prevYear = month === 0 ? year - 1 : year;
+                        
+                        const dayCell = document.createElement('div');
+                        dayCell.className = 'calendar-day other-month';
+                        dayCell.innerHTML = `
+                            <div class="day-header">
+                                <span class="day-number">${day}</span>
+                                <span>${prevMonth}月</span>
+                            </div>
+                        `;
+                        dayCell.setAttribute('data-date', `${prevYear}-${String(prevMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+                        calendarEl.appendChild(dayCell);
+                    }
+                    
+                    // 添加当前月的日期
+                    for (let i = 1; i <= lastDay.getDate(); i++) {
+                        const dayCell = document.createElement('div');
+                        dayCell.className = 'calendar-day';
+                        
+                        const isToday = isCurrentDay(year, month, i);
+                        if (isToday) {
+                            dayCell.classList.add('today');
+                        }
+                        
+                        dayCell.innerHTML = `
+                            <div class="day-header">
+                                <span class="day-number">${i}</span>
+                                <span>${month + 1}月</span>
+                            </div>
+                        `;
+                        dayCell.setAttribute('data-date', `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`);
+                        calendarEl.appendChild(dayCell);
+                    }
+                    
+                    // 添加下个月的日期来填满网格（7天一周，最多6行）
+                    const totalCells = 42; // 7列 × 6行
+                    const daysFromThisMonth = lastDay.getDate() + firstDayIndex;
+                    const nextDaysCount = totalCells - daysFromThisMonth;
+                    
+                    for (let i = 1; i <= nextDaysCount; i++) {
+                        const nextMonth = month === 11 ? 1 : month + 2;
+                        const nextYear = month === 11 ? year + 1 : year;
+                        
+                        const dayCell = document.createElement('div');
+                        dayCell.className = 'calendar-day other-month';
+                        dayCell.innerHTML = `
+                            <div class="day-header">
+                                <span class="day-number">${i}</span>
+                                <span>${nextMonth}月</span>
+                            </div>
+                        `;
+                        dayCell.setAttribute('data-date', `${nextYear}-${String(nextMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`);
+                        calendarEl.appendChild(dayCell);
+                    }
+                }
+                
+                function isCurrentDay(year, month, day) {
+                    const today = new Date();
+                    return today.getFullYear() === year && 
+                           today.getMonth() === month && 
+                           today.getDate() === day;
+                }
+                
+                // 修改updateCalendarView函数，基于日期属性查找日历单元格
+                function updateCalendarView() {
+                    // 清除所有现有事件
+                    document.querySelectorAll('.event').forEach(e => e.remove());
+                    
+                    // 重新添加事件
+                    scheduleData.forEach(schedule => {
+                        // 计算日期范围内的所有日期
+                        const dates = getDatesInRange(new Date(schedule.startDate), new Date(schedule.endDate));
+                        
+                        // 在每个日期单元格上添加事件
+                        dates.forEach(date => {
+                            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                            const targetCell = document.querySelector(`.calendar-day[data-date="${dateStr}"]`);
+                            
+                            if (targetCell) {
+                                const eventElement = document.createElement('div');
+                                eventElement.className = 'event';
+                                eventElement.setAttribute('data-id', schedule.id);
+                                eventElement.textContent = schedule.title;
+                                
+                                eventElement.addEventListener('click', function() {
+                                    openModalForEdit(schedule.id);
+                                });
+                                
+                                targetCell.appendChild(eventElement);
+                            }
+                        });
+                    });
+                    
+                    // 应用当前筛选
+                    if (personFilter) {
+                        const selectedPerson = personFilter.value;
+                        if (selectedPerson !== 'all') {
+                            updateCalendarEventFilter(selectedPerson);
+                        }
+                    }
+                }
+                
+                // 添加工具函数，获取日期范围内的所有日期
+                function getDatesInRange(startDate, endDate) {
+                    const dates = [];
+                    let currentDate = new Date(startDate);
+                    
+                    // 设置为当天的零点，避免时区问题
+                    currentDate.setHours(0, 0, 0, 0);
+                    
+                    // 复制一个结束日期，设置为当天结束
+                    const lastDate = new Date(endDate);
+                    lastDate.setHours(23, 59, 59, 999);
+                    
+                    while (currentDate <= lastDate) {
+                        dates.push(new Date(currentDate));
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+                    
+                    return dates;
+                }
+                
+                // 修改init函数，添加日历初始化
+                function init() {
+                    try {
+                        // 初始应用人员筛选（默认显示全部）
+                        applyPersonFilter();
+                        
+                        // 生成日历
+                        generateCalendarDays();
+                        
+                        // 更新日历视图中的事件
+                        updateCalendarView();
+                        
+                        console.log('日程表初始化完成');
+                    } catch (error) {
+                        console.error('初始化出错:', error);
+                    }
+                }
+                
+                // 立即执行初始化函数
+                init();
+            } catch (error) {
+                console.error('JS加载错误:', error);
+            }
+        });
+    </script>
+</body>
+</html>

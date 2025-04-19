@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会议详情</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-medium: #232323;
+            --bg-light: #2a2a2a;
+            --border-color: #3a3a3a;
+            --text-primary: #e6e6e6;
+            --text-secondary: #aaaaaa;
+            --accent-color: #ffbb00;
+            --accent-bg: #663c00;
+            --link-color: #4dabff;
+            --tag-bg: #444;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        
+        .header {
+            background-color: var(--bg-medium);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .id-number {
+            font-weight: bold;
+            color: var(--text-primary);
+            font-size: 16px;
+            padding: 4px 10px;
+            background-color: var(--bg-light);
+            border-radius: 4px;
+        }
+        
+        .meeting-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            font-size: 13px;
+        }
+        
+        .company-tag {
+            background-color: var(--accent-bg);
+            color: var(--accent-color);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+        
+        .close-btn {
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 20px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .close-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+        
+        .sub-header {
+            background-color: var(--bg-light);
+            padding: 10px 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .sub-header > span {
+            display: flex;
+            align-items: center;
+        }
+        
+        .tag {
+            background-color: var(--tag-bg);
+            padding: 2px 8px;
+            border-radius: 3px;
+            color: var(--text-secondary);
+            margin-left: 5px;
+            font-size: 12px;
+        }
+        
+        .collapsible {
+            margin-top: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .collapsible-header {
+            background-color: var(--bg-medium);
+            padding: 12px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .collapsible-header:hover {
+            background-color: var(--bg-light);
+        }
+        
+        .arrow {
+            margin-right: 10px;
+            transition: transform 0.3s;
+            color: var(--accent-color);
+        }
+        
+        .arrow.down {
+            transform: rotate(90deg);
+        }
+        
+        .collapsible-content {
+            background-color: var(--bg-dark);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+        }
+        
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 10px 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+        
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .highlight {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+        
+        .warning-icon {
+            color: var(--warning-color);
+            margin-left: 5px;
+        }
+        
+        .link {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+        
+        .link:hover {
+            text-decoration: underline;
+        }
+        
+        .note {
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-data {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        
+        .file-icon {
+            margin-right: 5px;
+        }
+        
+        .status-tag {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .status-active {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: var(--success-color);
+        }
+        
+        .status-pending {
+            background-color: rgba(255, 152, 0, 0.2);
+            color: var(--warning-color);
+        }
+        
+        .action-btn {
+            color: var(--link-color);
+            cursor: pointer;
+            margin: 0 5px;
+            font-size: 12px;
+        }
+        
+        .action-btn:hover {
+            text-decoration: underline;
+        }
+        
+        .btn {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background-color: #3a3a3a;
+        }
+        
+        .btn-primary {
+            background-color: #2c5282;
+            border-color: #2c5282;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2b4c7a;
+        }
+        
+        .btn-icon {
+            margin-right: 5px;
+            font-size: 14px;
+        }
+        
+        .operation-cell {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="id-number">3587742</div>
+        <div class="meeting-info">
+            <span>创建日期: 2025.04.15 17:13:38</span>
+            <span>业务代伐码: <span class="company-tag">C00550 深圳市新能光电子有限公司</span></span>
+            <span>会议性质: 商业学术</span>
+            <span>会议类型: 会议</span>
+            <span>会议名称: 2025第川新材料产业对接会</span>
+            <span>会议起止日期: 2025.08.08-2025.08.10</span>
+        </div>
+        <div class="close-btn">✕</div>
+    </div>
+
+    <div class="sub-header">
+        <span>预算: <b>10,000.00</b></span>
+        <span>币种: <b>人民币</b></span>
+        <span>有无奖金: </span>
+        <span>会议状态: <span class="tag">待评审</span></span>
+        <span>申请人: <span class="tag">S6-刘桂秀</span></span>
+    </div>
+
+    <div class="collapsible">
+        <div class="collapsible-header">
+            <span class="arrow">▶</span> 1.会议信息
+        </div>
+        <div class="collapsible-content">
+            <table>
+                <tr>
+                    <th>主办单位</th>
+                    <th>协办单位</th>
+                    <th>会议规模</th>
+                    <th>会议对接人</th>
+                    <th>联系电话</th>
+                    <th>举办区域</th>
+                    <th>详细地址</th>
+                    <th>展位面积/m²</th>
+                    <th>展会物料</th>
+                    <th>参会人数/帮主</th>
+                </tr>
+                <tr>
+                    <td>宁夏大学科材</td>
+                    <td>-</td>
+                    <td>300-599人</td>
+                    <td>马曲</td>
+                    <td>18813111680</td>
+                    <td>亚洲/中国/宁夏/银川</td>
+                    <td>中国宁夏,银川悦海宾馆</td>
+                    <td>-</td>
+                    <td><a href="https://mp.weixin.qq.com" class="link">https://mp.weixin.qq.com</a></td>
+                    <td>0  参会总额4人，1个帮主位，合等</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="collapsible">
+        <div class="collapsible-header">
+            <span class="arrow">▶</span> 1.2附件
+        </div>
+        <div class="collapsible-content">
+            <table>
+                <tr>
+                    <th width="5%">#</th>
+                    <th width="15%">文件类型</th>
+                    <th width="40%">文件名称</th>
+                    <th width="15%">创建者</th>
+                    <th width="15%">创建时间</th>
+                    <th width="10%">帮主</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>会议资料</td>
+                    <td><span class="highlight">►</span> [S6] 会议申请书-S6刘桂秀- 2025第川新材料产业对接会-2025年8月8日-...</td>
+                    <td>S6-刘桂秀</td>
+                    <td>2025.04.15 17:12:43</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>会议资料</td>
+                    <td><span class="highlight">►</span> 写功方案.pdf</td>
+                    <td>S6-刘桂秀</td>
+                    <td>2025.04.15 17:13:15</td>
+                    <td>-</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="collapsible">
+        <div class="collapsible-header">
+            <div class="section-header">
+                <div>
+                    <span class="arrow">▶</span> 1.3参会人员(唯一码)
+                </div>
+                <button class="btn btn-primary" onclick="location.href='schedule.html'">
+                    <span class="btn-icon">📅</span>查看日程
+                </button>
+            </div>
+        </div>
+        <div class="collapsible-content">
+            <table>
+                <tr>
+                    <th>#</th>
+                    <th>参会人员</th>
+                    <th>唯一码</th>
+                    <th>报销号码</th>
+                    <th>报销金额</th>
+                    <th>更新时间</th>
+                    <th>创建时间</th>
+                    <th>操作者</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>张明</td>
+                    <td>ZM2025081</td>
+                    <td>BX10025648</td>
+                    <td>2,500.00</td>
+                    <td>2025.05.10 09:15:22</td>
+                    <td>2025.04.16 10:30:15</td>
+                    <td>S6-刘桂秀</td>
+                    <td><span class="status-tag status-active">已确认</span></td>
+                    <td class="operation-cell">
+                        <a href="#" class="action-btn">提交日程</a>
+                        <a href="#" class="action-btn">编辑日程</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>李伟</td>
+                    <td>LW2025082</td>
+                    <td>BX10025649</td>
+                    <td>2,500.00</td>
+                    <td>2025.05.10 09:20:43</td>
+                    <td>2025.04.16 11:05:38</td>
+                    <td>S6-刘桂秀</td>
+                    <td><span class="status-tag status-active">已确认</span></td>
+                    <td class="operation-cell">
+                        <a href="#" class="action-btn">提交日程</a>
+                        <a href="#" class="action-btn">编辑日程</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>王芳</td>
+                    <td>WF2025083</td>
+                    <td>BX10025650</td>
+                    <td>2,500.00</td>
+                    <td>2025.05.10 09:32:17</td>
+                    <td>2025.04.16 14:22:51</td>
+                    <td>S6-刘桂秀</td>
+                    <td><span class="status-tag status-active">已确认</span></td>
+                    <td class="operation-cell">
+                        <a href="#" class="action-btn">提交日程</a>
+                        <a href="#" class="action-btn">编辑日程</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>赵强</td>
+                    <td>ZQ2025084</td>
+                    <td>BX10025651</td>
+                    <td>2,500.00</td>
+                    <td>2025.05.10 09:45:32</td>
+                    <td>2025.04.16 16:08:27</td>
+                    <td>S6-刘桂秀</td>
+                    <td><span class="status-tag status-pending">待确认</span></td>
+                    <td class="operation-cell">
+                        <a href="#" class="action-btn">提交日程</a>
+                        <a href="#" class="action-btn">编辑日程</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="collapsible">
+        <div class="collapsible-header">
+            <span class="arrow">▶</span> 2.会议资料
+        </div>
+        <div class="collapsible-content">
+            <div class="empty-data">暂无会议资料</div>
+        </div>
+    </div>
+
+    <div class="collapsible">
+        <div class="collapsible-header">
+            <span class="arrow">▶</span> 3.会议反馈
+        </div>
+        <div class="collapsible-content">
+            <div class="empty-data">暂无会议反馈</div>
+        </div>
+    </div>
+
+    <div class="collapsible">
+        <div class="collapsible-header">
+            <span class="arrow">▶</span> 4.操作说明
+        </div>
+        <div class="collapsible-content">
+            <div class="empty-data">暂无操作说明</div>
+        </div>
+    </div>
+
+    <script>
+        // 为可折叠面板添加点击事件
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function(event) {
+                // 如果点击的是按钮，不触发折叠
+                if (event.target.tagName === 'BUTTON' || 
+                    event.target.closest('button') || 
+                    event.target.classList.contains('btn-icon')) {
+                    return;
+                }
+                
+                const arrow = this.querySelector('.arrow');
+                arrow.classList.toggle('down');
+                
+                const content = this.nextElementSibling;
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        });
+
+        // 默认展开第一个面板和参会人员模块
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstHeader = document.querySelector('.collapsible-header');
+            const participantsHeader = document.querySelectorAll('.collapsible-header')[2]; // 第三个面板是参会人员
+            
+            if (firstHeader) {
+                firstHeader.click();
+            }
+            
+            if (participantsHeader) {
+                participantsHeader.click();
+            }
+        });
+    </script>
+</body>
+</html>
